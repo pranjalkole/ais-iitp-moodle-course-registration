@@ -17,3 +17,4 @@
 
 ## TODO
 - add a way to select a list of courses and enroll in one based on prof - prof may be revealed at the same time as enroll button.
+- add a way to cycle between multiple users (MoodleSession cookies) to keep them all alive, while waiting for the website to enable enrollment. this shoyld be in a config file.
