@@ -42,7 +42,7 @@ class MyHTMLParser1(HTMLParser):
                     self.instance = self.value
             except: pass
         elif tag == "a":
-            if attrs[0] == "href" and attrs[1] == login_url:
+            if attrs[0][0] == "href" and attrs[0][1] == login_url:
                 self.loggedin = False
 
 parser = MyHTMLParser()
@@ -62,22 +62,27 @@ while True:
     parser1.feed(body)
     if not parser1.loggedin:
         print("MoodleSession cookie expired")
-    elif parser1.instance is None:
-        print("No enroll button found")
-        continue
+        exit()
 
-    # TODO: untested
     idx = body.find("\"sesskey\":\"")
     idxend = body[idx+11:].find("\"")
     if idx == -1:
         print(f"Unexpected error occurred. Please create an issue at {issues_url} with details")
         exit()
     else:
-        sesskey = body[idx+11:idxend]
+        sesskey = body[idx+11:idx+11+idxend]
 
-    t = requests.post(enrol_url,
-                      data=f"id={course_id}&instance={parser1.instance}&sesskey={sesskey}&_qf__{parser1.instance}_enrol_autoenrol%5Cenrol_form=1&mform_isexpanded_id_autoenrolheader=1&submitbutton=Enrol+me",
-                      cookies=cookies, headers=headers, verify=False, allow_redirects=False)
+    if parser1.instance is None:
+        print("No enroll button found")
+        continue
+
+    try:
+        t = requests.post(enrol_url,
+                          data=f"id={course_id}&instance={parser1.instance}&sesskey={sesskey}&_qf__{parser1.instance}_enrol_autoenrol%5Cenrol_form=1&mform_isexpanded_id_autoenrolheader=1&submitbutton=Enrol+me",
+                          cookies=cookies, headers=headers, verify=False, allow_redirects=False)
+    except requests.exceptions.ConnectionError:
+        print("Failed to connect to website")
+        continue
     parser.feed(t.content.decode('utf-8'))
 
     if parser.bad:
