@@ -16,8 +16,11 @@ login_url = f"{base_url}/login/index.php"
 issues_url = "https://github.com/pranjalkole/ais-iitp-moodle-course-registration/issues"
 
 class MyHTMLParser(HTMLParser):
-    def handle_starttag(self, tag, attrs):
+    def __init__(self):
+        super().__init__()
         self.bad = True
+
+    def handle_starttag(self, tag, attrs):
         if tag == 'a':
             if attrs[0][1] == course_url:
                 self.bad = False
@@ -34,27 +37,29 @@ class MyHTMLParser1(HTMLParser):
         if tag == "input":
             for attr in attrs:
                 if attr[0] == "name":
-                    self.name = attr[1]
+                    name = attr[1]
                 elif attr[0] == "value":
-                    self.value = attr[1]
+                    value = attr[1]
             try:
-                if self.name == "instance":
-                    self.instance = self.value
+                if name == "instance":
+                    self.instance = value
             except: pass
         elif tag == "a":
             if attrs[0][0] == "href" and attrs[0][1] == login_url:
                 self.loggedin = False
 
-parser = MyHTMLParser()
-parser1 = MyHTMLParser1()
-
 while True:
     time.sleep(1)
+    parser = MyHTMLParser()
+    parser1 = MyHTMLParser1()
 
     try:
         t1 = requests.get(enrol_url_with_course_id,
-                          cookies=cookies, headers=headers, verify=False, allow_redirects=False)
+                          cookies=cookies, headers=headers, verify=False, allow_redirects=False, timeout=5)
     except requests.exceptions.ConnectionError:
+        print("Failed to connect to website")
+        continue
+    except requests.exceptions.Timeout:
         print("Failed to connect to website")
         continue
 
